@@ -7,11 +7,11 @@ class Cita:
     def obtener_todas(self, id_admin):
         return self.consultas.obtener_citas(id_admin)
     
-    def crear(self, id_paciente, id_horario, fecha):
-        return self.consultas.agregar_cita(id_paciente, id_horario, fecha)
+    def crear(self, id_paciente, id_horario, fecha, hora_cita):
+        return self.consultas.agregar_cita(id_paciente, id_horario, fecha, hora_cita)
     
-    def actualizar(self, id_cita, id_paciente, id_horario, fecha):
-        return self.consultas.actualizar_cita(id_cita, id_paciente, id_horario, fecha)
+    def actualizar(self, id_cita, id_paciente, id_horario, fecha, hora_cita):
+        return self.consultas.actualizar_cita(id_cita, id_paciente, id_horario, fecha, hora_cita)
     
     def eliminar(self, id_cita):
         return self.consultas.eliminar_cita(id_cita)

@@ -1,8 +1,10 @@
 import customtkinter as ctk
+from tkinter import messagebox
 from view.tema import Tema
 from view.pacientes import VentanaPacientes
 from view.citas import VentanaCitas
-from view.registro import VentanaRegistro
+from view.admins import VentanaAdmins
+from view.ingresos import VentanaIngresos
 from configuracion import Configuracion
 from model.administrador import Administrador
 
@@ -30,7 +32,8 @@ class VentanaPrincipal:
         
         self.ventana_pacientes = None
         self.ventana_citas = None
-        self.ventana_registro = None
+        self.ventana_admins = None
+        self.ventana_ingresos = None
         
         self.configurar_interfaz()
         self.root.focus_set()
@@ -78,7 +81,7 @@ class VentanaPrincipal:
             self.abrir_pacientes,
             400
         )
-        self.boton_pacientes.pack(pady=20)
+        self.boton_pacientes.pack(pady=15)
         
         self.boton_citas = self.tema.crear_boton_primario(
             botones_frame, 
@@ -86,16 +89,23 @@ class VentanaPrincipal:
             self.abrir_citas,
             400
         )
-        self.boton_citas.pack(pady=20)
+        self.boton_citas.pack(pady=15)
         
-        # Nuevo botón para registrar administradores
-        self.boton_registrar_admin = self.tema.crear_boton_primario(
+        self.boton_ingresos = self.tema.crear_boton_primario(
             botones_frame, 
-            "👤 REGISTRAR ADMINISTRADOR", 
-            self.abrir_registro_admin,
+            "💰 CONTROL DE INGRESOS", 
+            self.abrir_ingresos,
             400
         )
-        self.boton_registrar_admin.pack(pady=20)
+        self.boton_ingresos.pack(pady=15)
+        
+        self.boton_admins = self.tema.crear_boton_primario(
+            botones_frame, 
+            "👤 GESTIONAR ADMINISTRADORES", 
+            self.abrir_admins,
+            400
+        )
+        self.boton_admins.pack(pady=15)
         
         self.boton_salir = self.tema.crear_boton_secundario(
             botones_frame,
@@ -113,11 +123,16 @@ class VentanaPrincipal:
         self.root.withdraw()  
         self.ventana_citas = VentanaCitas(self.root, self.id_admin)
     
-    def abrir_registro_admin(self):
+    def abrir_admins(self):
         self.root.withdraw()  
-        self.ventana_registro = VentanaRegistro(self.root)
+        self.ventana_admins = VentanaAdmins(self.root, self.id_admin)
+    
+    def abrir_ingresos(self):
+        self.root.withdraw()  
+        self.ventana_ingresos = VentanaIngresos(self.root, self.id_admin)
     
     def cerrar_sesion(self):
-        self.root.attributes('-fullscreen', False)
-        self.root.destroy()
-        self.ventana_login.deiconify()  
+        if messagebox.askyesno("Confirmar", "¿Está seguro que desea cerrar sesión?"):
+            self.root.attributes('-fullscreen', False)
+            self.root.destroy()
+            self.ventana_login.deiconify()

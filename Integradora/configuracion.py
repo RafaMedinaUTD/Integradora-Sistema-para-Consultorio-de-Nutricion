@@ -7,7 +7,7 @@ class Configuracion:
         "rojo": "#BD4941",
         "rojo_hover": "#9B3A47",
         "gris": "#4C6140",
-        "gris_claro": "#BEC5B8"
+        "gris_claro": "#C5D1BD"
     }
     
     FUENTES = {
@@ -30,6 +30,7 @@ class Configuracion:
         "principal": "pantalla_completa",
         "pacientes": "pantalla_completa",
         "citas": "pantalla_completa",
-        "registro": "500x800",
-        "editar": "400x300"
+        "admins": "pantalla_completa",
+        "ingresos": "pantalla_completa",
+        "editar": "400x400"
     }

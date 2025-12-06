@@ -70,7 +70,7 @@ class VentanaCitas:
         self.fecha_entry.pack(side="left", padx=15, pady=15)
         self.fecha_entry.bind('<KeyRelease>', self.actualizar_horarios_disponibles)
         
-        self.texto_horario = self.tema.crear_texto_pequeno(form_frame, "Horario:")
+        self.texto_horario = self.tema.crear_texto_pequeno(form_frame, "Hora de la cita:")
         self.texto_horario.pack(side="left", padx=15)
         self.horario_combobox = ctk.CTkComboBox(
             form_frame,
@@ -89,18 +89,18 @@ class VentanaCitas:
         self.tree_frame = ctk.CTkFrame(self.ventana)
         self.tree_frame.pack(fill="both", expand=True, padx=20, pady=15)
         
-        self.tree = ttk.Treeview(self.tree_frame, columns=("ID", "Paciente", "Peso", "Día", "Turno", "Fecha"), show="headings", height=20)
+        self.tree = ttk.Treeview(self.tree_frame, columns=("ID", "Paciente", "Peso", "Día", "Hora", "Fecha"), show="headings", height=20)
         self.tree.heading("ID", text="ID Cita")
         self.tree.heading("Paciente", text="Nombre del Paciente")
         self.tree.heading("Peso", text="Peso (kg)")
         self.tree.heading("Día", text="Día")
-        self.tree.heading("Turno", text="Turno")
+        self.tree.heading("Hora", text="Hora")
         self.tree.heading("Fecha", text="Fecha")
         self.tree.column("ID", width=80)
         self.tree.column("Paciente", width=300)
         self.tree.column("Peso", width=100)
         self.tree.column("Día", width=100)
-        self.tree.column("Turno", width=150)
+        self.tree.column("Hora", width=150)
         self.tree.column("Fecha", width=120)
         
         scrollbar = ttk.Scrollbar(self.tree_frame, orient="vertical", command=self.tree.yview)
@@ -140,15 +140,7 @@ class VentanaCitas:
             try:
                 horarios = self.cita.obtener_horarios_disponibles_por_fecha(fecha)
                 if horarios:
-                    opciones_horarios = []
-                    for horario in horarios:
-                        # Generar intervalos de 10 minutos para cada horario disponible
-                        intervalos = self.cita.generar_horarios_intervalo(
-                            horario['hora_inicio'], 
-                            horario['hora_fin']
-                        )
-                        for intervalo in intervalos:
-                            opciones_horarios.append(f"{horario['dia_semana']} - {intervalo}")
+                    opciones_horarios = [h['hora'] for h in horarios]
                     
                     self.horario_combobox.configure(values=opciones_horarios, state="normal")
                     if opciones_horarios:
@@ -169,22 +161,17 @@ class VentanaCitas:
     def obtener_id_paciente(self, texto):
         return texto.split(" - ")[0]
     
-    def obtener_id_horario_desde_texto(self, texto_horario):
+    def obtener_horario_completo(self, hora_texto):
+        # Buscar el horario completo en la base de datos basado en la hora y fecha
+        fecha = self.fecha_entry.get()
         try:
-            partes = texto_horario.split(" - ")
-            dia_semana = partes[0]
-            hora = partes[1]
-            
-            # Buscar el horario en la base de datos
-            horarios = self.cita.obtener_horarios_disponibles()
+            horarios = self.cita.obtener_horarios_disponibles_por_fecha(fecha)
             for horario in horarios:
-                if (horario['dia_semana'] == dia_semana and 
-                    hora >= horario['hora_inicio'] and 
-                    hora < horario['hora_fin']):
-                    return horario['id_horario']
+                if horario['hora'] == hora_texto:
+                    return horario['id_horario'], horario['hora']
         except Exception as e:
-            messagebox.showerror("Error", f"Error al obtener ID del horario: {str(e)}")
-        return None
+            messagebox.showerror("Error", f"Error al obtener horario: {str(e)}")
+        return None, None
     
     def actualizar_lista(self):
         for item in self.tree.get_children():
@@ -193,13 +180,12 @@ class VentanaCitas:
         try:
             citas = self.cita.obtener_todas(self.id_admin)
             for cita in citas:
-                horario_texto = f"{cita['hora_inicio']} - {cita['hora_fin']}"
                 self.tree.insert("", "end", values=(
                     cita["id_cita"],
                     cita["nombre"],
                     cita["peso"],
                     cita["dia_semana"],
-                    horario_texto,
+                    cita["hora_cita"],
                     cita["fecha"]
                 ))
         except Exception as e:
@@ -208,9 +194,9 @@ class VentanaCitas:
     def agregar_cita(self):
         paciente_texto = self.paciente_combobox.get()
         fecha = self.fecha_entry.get()
-        horario_texto = self.horario_combobox.get()
+        hora_texto = self.horario_combobox.get()
         
-        if not paciente_texto or not fecha or not horario_texto:
+        if not paciente_texto or not fecha or not hora_texto:
             messagebox.showerror("Error", "Todos los campos son obligatorios")
             return
         
@@ -220,13 +206,13 @@ class VentanaCitas:
         
         try:
             id_paciente = self.obtener_id_paciente(paciente_texto)
-            id_horario = self.obtener_id_horario_desde_texto(horario_texto)
+            id_horario, hora_cita = self.obtener_horario_completo(hora_texto)
             
             if id_horario is None:
                 messagebox.showerror("Error", "Horario no válido")
                 return
             
-            self.cita.crear(id_paciente, id_horario, fecha)
+            self.cita.crear(id_paciente, id_horario, fecha, hora_cita)
             self.actualizar_lista()
             self.fecha_entry.delete(0, "end")
             self.horario_combobox.set("")
@@ -288,21 +274,14 @@ class VentanaCitas:
             if Validaciones.validar_fecha(fecha):
                 try:
                     horarios = self.cita.obtener_horarios_disponibles_por_fecha(fecha)
-                    opciones_horarios = []
-                    for horario in horarios:
-                        intervalos = self.cita.generar_horarios_intervalo(
-                            horario['hora_inicio'], 
-                            horario['hora_fin']
-                        )
-                        for intervalo in intervalos:
-                            opciones_horarios.append(f"{horario['dia_semana']} - {intervalo}")
+                    opciones_horarios = [h['hora'] for h in horarios]
                     
                     horario_combobox.configure(values=opciones_horarios)
                     if opciones_horarios:
-                        # Intentar mantener el horario original si está disponible
-                        horario_original = f"{valores[3]} - {valores[4].split(' - ')[0]}"
-                        if horario_original in opciones_horarios:
-                            horario_combobox.set(horario_original)
+                        # Intentar mantener la hora original si está disponible
+                        hora_original = valores[4]
+                        if hora_original in opciones_horarios:
+                            horario_combobox.set(hora_original)
                         else:
                             horario_combobox.set(opciones_horarios[0])
                 except Exception as e:
@@ -313,23 +292,32 @@ class VentanaCitas:
         
         def guardar_cambios():
             nueva_fecha = fecha_entry.get()
-            nuevo_horario = horario_combobox.get()
+            nueva_hora = horario_combobox.get()
             
             if not Validaciones.validar_fecha(nueva_fecha):
                 messagebox.showerror("Error", "Formato de fecha inválido. Use YYYY-MM-DD")
                 return
             
-            if not nuevo_horario:
-                messagebox.showerror("Error", "Seleccione un horario")
+            if not nueva_hora:
+                messagebox.showerror("Error", "Seleccione una hora")
                 return
             
             try:
-                id_horario = self.obtener_id_horario_desde_texto(nuevo_horario)
+                # Obtener id_horario basado en la hora seleccionada
+                horarios = self.cita.obtener_horarios_disponibles_por_fecha(nueva_fecha)
+                id_horario = None
+                hora_cita = None
+                for horario in horarios:
+                    if horario['hora'] == nueva_hora:
+                        id_horario = horario['id_horario']
+                        hora_cita = horario['hora']
+                        break
+                
                 if id_horario is None:
                     messagebox.showerror("Error", "Horario no válido")
                     return
                 
-                self.cita.actualizar(id_cita, id_paciente_actual, id_horario, nueva_fecha)
+                self.cita.actualizar(id_cita, id_paciente_actual, id_horario, nueva_fecha, hora_cita)
                 self.actualizar_lista()
                 ventana_editar.destroy()
                 messagebox.showinfo("Éxito", "Cita actualizada correctamente")
