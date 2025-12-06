@@ -7,7 +7,7 @@ class Configuracion:
         "rojo": "#BD4941",
         "rojo_hover": "#9B3A47",
         "gris": "#4C6140",
-        "gris_claro": "#C5D1BD"
+        "gris_claro": "#BEC5B8"
     }
     
     FUENTES = {
