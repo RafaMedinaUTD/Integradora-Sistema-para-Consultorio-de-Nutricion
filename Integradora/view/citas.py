@@ -1,185 +1,134 @@
 import customtkinter as ctk
 from tkinter import ttk, messagebox
-from datetime import datetime, timedelta
-import tkinter as tk
 from model.cita import Cita
 from model.paciente import Paciente
 from view.tema import Tema
-from configuracion import Configuracion
 from controller.validaciones import Validaciones
 
-class VentanaCitas:
-    def __init__(self, ventana_principal, id_admin):
-        self.ventana_principal = ventana_principal
+class VistaCitas(ctk.CTkFrame):
+    def __init__(self, parent, id_admin):
+        super().__init__(parent)
         self.id_admin = id_admin
         self.cita = Cita()
         self.paciente_model = Paciente()
         self.tema = Tema()
         
-        self.ventana = ctk.CTkToplevel(ventana_principal)
-        self.ventana.title("Gestión de Citas")
-        
-        # Configurar pantalla completa
-        ancho_pantalla = self.ventana.winfo_screenwidth()
-        alto_pantalla = self.ventana.winfo_screenheight()
-        self.ventana.geometry(f"{ancho_pantalla}x{alto_pantalla}+0+0")
-        self.ventana.attributes('-fullscreen', True)
-        
-        self.ventana.configure(fg_color=self.tema.colores["blanco"])
-        self.ventana.protocol("WM_DELETE_WINDOW", self.volver_principal)
-        
-        # Configurar atajo de teclado para salir de pantalla completa (Esc)
-        self.ventana.bind('<Escape>', lambda e: self.volver_principal())
-        
+        self.configure(fg_color=self.tema.colores["blanco"])
         self.configurar_interfaz()
         self.actualizar_lista()
-        self.ventana.focus_set()
     
     def configurar_interfaz(self):
-        header_frame = ctk.CTkFrame(self.ventana, fg_color=self.tema.colores["verde"], height=100)
-        header_frame.pack(fill="x", padx=20, pady=20)
-        header_frame.pack_propagate(False)
+        titulo = ctk.CTkLabel(self, text="Gestión de Citas", font=("Arial", 28, "bold"), text_color=self.tema.colores["verde"])
+        titulo.pack(pady=20)
         
-        titulo = ctk.CTkLabel(
-            header_frame,
-            text="Gestión de Citas",
-            font=("Arial", 28, "bold"),
-            text_color=self.tema.colores["blanco"]
-        )
-        titulo.pack(pady=25)
-        
-        form_frame = ctk.CTkFrame(self.ventana)
+        form_frame = ctk.CTkFrame(self)
         self.tema.aplicar_tema_frame(form_frame)
-        form_frame.pack(fill="x", padx=20, pady=15)
+        form_frame.pack(fill="x", padx=20, pady=10)
         
-        self.texto_paciente = self.tema.crear_texto_pequeno(form_frame, "Nombre del paciente:")
-        self.texto_paciente.pack(side="left", padx=15)
-        self.paciente_combobox = ctk.CTkComboBox(
-            form_frame,
-            values=self.obtener_nombres_pacientes(),
-            width=300,
-            height=40,
-            dropdown_fg_color=self.tema.colores["blanco"],
-            dropdown_text_color=self.tema.colores["negro"]
-        )
-        self.paciente_combobox.pack(side="left", padx=15, pady=15)
+        self.texto_paciente = self.tema.crear_texto_pequeno(form_frame, "Paciente:")
+        self.texto_paciente.pack(side="left", padx=10)
+        self.paciente_combobox = ctk.CTkComboBox(form_frame, 
+                                                 values=self.obtener_nombres_pacientes(), 
+                                                 width=200, 
+                                                 dropdown_fg_color="white", 
+                                                 dropdown_text_color="black", 
+                                                 button_color=self.tema.colores["gris_claro"],
+                                                 button_hover_color=self.tema.colores["gris_contraste"],
+                                                 border_color=self.tema.colores["gris_claro"])
+        self.paciente_combobox.pack(side="left", padx=10, pady=15)
         
         self.texto_fecha = self.tema.crear_texto_pequeno(form_frame, "Fecha (YYYY-MM-DD):")
-        self.texto_fecha.pack(side="left", padx=15)
-        self.fecha_entry = self.tema.crear_entrada(form_frame, "YYYY-MM-DD", 200)
-        self.fecha_entry.pack(side="left", padx=15, pady=15)
+        self.texto_fecha.pack(side="left", padx=10)
+        self.fecha_entry = self.tema.crear_entrada(form_frame, "YYYY-MM-DD", 120)
+        self.fecha_entry.pack(side="left", padx=10, pady=15)
         self.fecha_entry.bind('<KeyRelease>', self.actualizar_horarios_disponibles)
         
-        self.texto_horario = self.tema.crear_texto_pequeno(form_frame, "Hora de la cita:")
-        self.texto_horario.pack(side="left", padx=15)
-        self.horario_combobox = ctk.CTkComboBox(
-            form_frame,
-            values=[],
-            width=200,
-            height=40,
-            dropdown_fg_color=self.tema.colores["blanco"],
-            dropdown_text_color=self.tema.colores["negro"],
-            state="disabled"
-        )
-        self.horario_combobox.pack(side="left", padx=15, pady=15)
+        self.texto_horario = self.tema.crear_texto_pequeno(form_frame, "Hora:")
+        self.texto_horario.pack(side="left", padx=10)
+        self.horario_combobox = ctk.CTkComboBox(form_frame, 
+                                                values=[], 
+                                                width=100, 
+                                                state="disabled", 
+                                                dropdown_fg_color="white", 
+                                                dropdown_text_color="black", 
+                                                button_color=self.tema.colores["gris_claro"],
+                                                button_hover_color=self.tema.colores["gris_contraste"],
+                                                border_color=self.tema.colores["gris_claro"])
+        self.horario_combobox.pack(side="left", padx=10, pady=15)
         
-        self.boton_agregar = self.tema.crear_boton_primario(form_frame, "➕ AGREGAR CITA", self.agregar_cita, 180)
-        self.boton_agregar.pack(side="left", padx=15, pady=15)
+        self.boton_agregar = self.tema.crear_boton_primario(form_frame, "➕ Agendar", self.agregar_cita, 150)
+        self.boton_agregar.pack(side="left", padx=20, pady=15)
         
-        self.tree_frame = ctk.CTkFrame(self.ventana)
+        # Tabla
+        self.tree_frame = ctk.CTkFrame(self)
         self.tree_frame.pack(fill="both", expand=True, padx=20, pady=15)
         
-        self.tree = ttk.Treeview(self.tree_frame, columns=("ID", "Paciente", "Peso", "Día", "Hora", "Fecha"), show="headings", height=20)
-        self.tree.heading("ID", text="ID Cita")
-        self.tree.heading("Paciente", text="Nombre del Paciente")
-        self.tree.heading("Peso", text="Peso (kg)")
+        self.tree = ttk.Treeview(self.tree_frame, columns=("ID", "Paciente", "Peso", "Día", "Hora", "Fecha"), show="headings", height=15)
+        self.tree.tag_configure("impar", background=self.tema.colores["gris_claro"]) #NUEVO 
+        self.tree.tag_configure("par", background=self.tema.colores["blanco"]) #NUEVO 
+
+        self.tree.heading("ID", text="ID")
+        self.tree.heading("Paciente", text="Paciente")
+        self.tree.heading("Peso", text="Peso")
         self.tree.heading("Día", text="Día")
         self.tree.heading("Hora", text="Hora")
         self.tree.heading("Fecha", text="Fecha")
-        self.tree.column("ID", width=80)
-        self.tree.column("Paciente", width=300)
-        self.tree.column("Peso", width=100)
-        self.tree.column("Día", width=100)
-        self.tree.column("Hora", width=150)
-        self.tree.column("Fecha", width=120)
+        
+        self.tree.column("ID", width=40, anchor="center")
+        self.tree.column("Paciente", width=200, anchor="center")
+        self.tree.column("Peso", width=60, anchor="center")
+        self.tree.column("Día", width=80, anchor="center")
+        self.tree.column("Hora", width=80, anchor="center")
+        self.tree.column("Fecha", width=100, anchor="center")
         
         scrollbar = ttk.Scrollbar(self.tree_frame, orient="vertical", command=self.tree.yview)
         self.tree.configure(yscrollcommand=scrollbar.set)
-        
         self.tree.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
         
-        # Botones más grandes
-        button_frame = ctk.CTkFrame(self.ventana)
+        # Botones inferiores
+        button_frame = ctk.CTkFrame(self, fg_color="transparent")
         button_frame.pack(fill="x", padx=20, pady=15)
         
-        self.boton_volver = self.tema.crear_boton_primario(button_frame, "← VOLVER AL MENÚ", self.volver_principal, 250)
-        self.boton_volver.pack(side="left", padx=10)
-        
-        self.boton_editar = self.tema.crear_boton_primario(button_frame, "✏️ EDITAR CITA", self.editar_cita, 200)
+        self.boton_editar = self.tema.crear_boton_primario(button_frame, "✏️ Editar", self.editar_cita, 150)
         self.boton_editar.pack(side="left", padx=10)
         
-        self.boton_eliminar = self.tema.crear_boton_secundario(button_frame, "🗑️ ELIMINAR CITA", self.eliminar_cita, 200)
+        self.boton_eliminar = self.tema.crear_boton_secundario(button_frame, "🗑️ Cancelar Cita", self.eliminar_cita, 150)
         self.boton_eliminar.pack(side="left", padx=10)
         
-        self.boton_actualizar = self.tema.crear_boton_primario(button_frame, "🔄 ACTUALIZAR LISTA", self.actualizar_lista, 200)
+        self.boton_actualizar = self.tema.crear_boton_primario(button_frame, "🔄 Recargar", self.actualizar_lista, 150)
         self.boton_actualizar.pack(side="right", padx=10)
-    
+
     def obtener_nombres_pacientes(self):
         try:
-            pacientes = self.paciente_model.obtener_todos(self.id_admin)
-            return [f"{p['id_paciente']} - {p['nombre']} ({p['peso']} kg)" for p in pacientes]
-        except Exception as e:
-            messagebox.showerror("Error", f"Error al cargar pacientes: {str(e)}")
-            return []
-    
+            return [f"{p['id_paciente']} - {p['nombre']} ({p['peso']} kg)" for p in self.paciente_model.obtener_todos(self.id_admin)]
+        except: return []
+
     def actualizar_horarios_disponibles(self, event=None):
         fecha = self.fecha_entry.get()
-        
         if Validaciones.validar_fecha(fecha):
             try:
                 horarios = self.cita.obtener_horarios_disponibles_por_fecha(fecha)
                 if horarios:
-                    opciones_horarios = [h['hora'] for h in horarios]
-                    
-                    self.horario_combobox.configure(values=opciones_horarios, state="normal")
-                    if opciones_horarios:
-                        self.horario_combobox.set(opciones_horarios[0])
-                    else:
-                        self.horario_combobox.set("")
-                        messagebox.showwarning("Advertencia", "No hay horarios disponibles para esta fecha")
+                    opciones = [h['hora'] for h in horarios]
+                    self.horario_combobox.configure(values=opciones, state="normal")
+                    self.horario_combobox.set(opciones[0] if opciones else "")
                 else:
                     self.horario_combobox.configure(values=[], state="disabled")
                     self.horario_combobox.set("")
-                    messagebox.showwarning("Advertencia", "No hay horarios disponibles para esta fecha")
-            except Exception as e:
-                messagebox.showerror("Error", f"Error al cargar horarios: {str(e)}")
+            except: pass
         else:
             self.horario_combobox.configure(values=[], state="disabled")
-            self.horario_combobox.set("")
-    
-    def obtener_id_paciente(self, texto):
-        return texto.split(" - ")[0]
-    
-    def obtener_horario_completo(self, hora_texto):
-        # Buscar el horario completo en la base de datos basado en la hora y fecha
-        fecha = self.fecha_entry.get()
-        try:
-            horarios = self.cita.obtener_horarios_disponibles_por_fecha(fecha)
-            for horario in horarios:
-                if horario['hora'] == hora_texto:
-                    return horario['id_horario'], horario['hora']
-        except Exception as e:
-            messagebox.showerror("Error", f"Error al obtener horario: {str(e)}")
-        return None, None
-    
+
     def actualizar_lista(self):
         for item in self.tree.get_children():
             self.tree.delete(item)
         
         try:
             citas = self.cita.obtener_todas(self.id_admin)
-            for cita in citas:
+            for i, cita in enumerate(citas):
+                tag = "impar" if i % 2 != 0 else "par"
+                
                 self.tree.insert("", "end", values=(
                     cita["id_cita"],
                     cita["nombre"],
@@ -187,172 +136,98 @@ class VentanaCitas:
                     cita["dia_semana"],
                     cita["hora_cita"],
                     cita["fecha"]
-                ))
-        except Exception as e:
-            messagebox.showerror("Error", f"Error al cargar citas: {str(e)}")
-    
-    def agregar_cita(self):
-        paciente_texto = self.paciente_combobox.get()
-        fecha = self.fecha_entry.get()
-        hora_texto = self.horario_combobox.get()
-        
-        if not paciente_texto or not fecha or not hora_texto:
-            messagebox.showerror("Error", "Todos los campos son obligatorios")
-            return
-        
-        if not Validaciones.validar_fecha(fecha):
-            messagebox.showerror("Error", "Formato de fecha inválido. Use YYYY-MM-DD")
-            return
-        
-        try:
-            id_paciente = self.obtener_id_paciente(paciente_texto)
-            id_horario, hora_cita = self.obtener_horario_completo(hora_texto)
-            
-            if id_horario is None:
-                messagebox.showerror("Error", "Horario no válido")
-                return
-            
-            self.cita.crear(id_paciente, id_horario, fecha, hora_cita)
-            self.actualizar_lista()
-            self.fecha_entry.delete(0, "end")
-            self.horario_combobox.set("")
-            self.horario_combobox.configure(state="disabled")
-            messagebox.showinfo("Éxito", "Cita agregada correctamente")
+                ), tags=(tag,))
         except Exception as e:
             messagebox.showerror("Error", str(e))
-    
-    def editar_cita(self):
-        seleccionado = self.tree.selection()
-        if not seleccionado:
-            messagebox.showerror("Error", "Seleccione una cita")
+
+    def agregar_cita(self):
+        
+        paciente_txt = self.paciente_combobox.get()
+        fecha = self.fecha_entry.get()
+        hora = self.horario_combobox.get()
+        if not paciente_txt or not fecha or not hora:
+            messagebox.showerror("Error", "Campos incompletos")
             return
-        
-        item = seleccionado[0]
-        valores = self.tree.item(item, "values")
-        id_cita = valores[0]
-        
-        ventana_editar = ctk.CTkToplevel(self.ventana)
-        ventana_editar.title("Editar Cita")
-        ventana_editar.geometry("400x400")
-        ventana_editar.resizable(False, False)
-        ventana_editar.grab_set()
-        self.centrar_ventana_secundaria(ventana_editar, "400x400")
-        
-        titulo = self.tema.crear_subtitulo(ventana_editar, "Editar Cita")
-        titulo.pack(pady=20)
-        
-        paciente_label = self.tema.crear_texto_pequeno(ventana_editar, f"Paciente: {valores[1]}")
-        paciente_label.pack(pady=5)
-        
-        id_paciente_actual = None
+        if not Validaciones.validar_fecha(fecha):
+            messagebox.showerror("Error", "Fecha inválida")
+            return
         try:
-            pacientes = self.paciente_model.obtener_todos(self.id_admin)
-            for paciente in pacientes:
-                if paciente['nombre'] == valores[1]:
-                    id_paciente_actual = paciente['id_paciente']
-                    break
-        except Exception as e:
-            messagebox.showerror("Error", f"Error al obtener información del paciente: {str(e)}")
-            return
-        
-        fecha_entry = self.tema.crear_entrada(ventana_editar, "Fecha (YYYY-MM-DD)", 300)
-        fecha_entry.insert(0, valores[5])
-        fecha_entry.pack(pady=10)
-        
-        horario_combobox = ctk.CTkComboBox(
-            ventana_editar,
-            values=[],
-            width=300,
-            height=40,
-            dropdown_fg_color=self.tema.colores["blanco"],
-            dropdown_text_color=self.tema.colores["negro"]
-        )
-        horario_combobox.pack(pady=10)
-        
-        def actualizar_horarios_edicion():
-            fecha = fecha_entry.get()
-            if Validaciones.validar_fecha(fecha):
-                try:
-                    horarios = self.cita.obtener_horarios_disponibles_por_fecha(fecha)
-                    opciones_horarios = [h['hora'] for h in horarios]
-                    
-                    horario_combobox.configure(values=opciones_horarios)
-                    if opciones_horarios:
-                        # Intentar mantener la hora original si está disponible
-                        hora_original = valores[4]
-                        if hora_original in opciones_horarios:
-                            horario_combobox.set(hora_original)
-                        else:
-                            horario_combobox.set(opciones_horarios[0])
-                except Exception as e:
-                    messagebox.showerror("Error", f"Error al cargar horarios: {str(e)}")
-        
-        fecha_entry.bind('<KeyRelease>', lambda e: actualizar_horarios_edicion())
-        actualizar_horarios_edicion()
-        
-        def guardar_cambios():
-            nueva_fecha = fecha_entry.get()
-            nueva_hora = horario_combobox.get()
+            id_paciente = paciente_txt.split(" - ")[0]
+            horarios = self.cita.obtener_horarios_disponibles_por_fecha(fecha)
+            id_horario = next((h['id_horario'] for h in horarios if h['hora'] == hora), None)
             
-            if not Validaciones.validar_fecha(nueva_fecha):
-                messagebox.showerror("Error", "Formato de fecha inválido. Use YYYY-MM-DD")
-                return
-            
-            if not nueva_hora:
-                messagebox.showerror("Error", "Seleccione una hora")
-                return
-            
-            try:
-                # Obtener id_horario basado en la hora seleccionada
-                horarios = self.cita.obtener_horarios_disponibles_por_fecha(nueva_fecha)
-                id_horario = None
-                hora_cita = None
-                for horario in horarios:
-                    if horario['hora'] == nueva_hora:
-                        id_horario = horario['id_horario']
-                        hora_cita = horario['hora']
-                        break
-                
-                if id_horario is None:
-                    messagebox.showerror("Error", "Horario no válido")
-                    return
-                
-                self.cita.actualizar(id_cita, id_paciente_actual, id_horario, nueva_fecha, hora_cita)
+            if id_horario:
+                self.cita.crear(id_paciente, id_horario, fecha, hora)
                 self.actualizar_lista()
-                ventana_editar.destroy()
-                messagebox.showinfo("Éxito", "Cita actualizada correctamente")
-            except Exception as e:
-                messagebox.showerror("Error", str(e))
-        
-        boton_guardar = self.tema.crear_boton_primario(ventana_editar, "💾 GUARDAR", guardar_cambios, 200)
-        boton_guardar.pack(pady=15)
-    
-    def centrar_ventana_secundaria(self, ventana, tamanio):
-        ventana.update_idletasks()
-        ancho = int(tamanio.split('x')[0])
-        alto = int(tamanio.split('x')[1])
-        x = (ventana.winfo_screenwidth() // 2) - (ancho // 2)
-        y = (ventana.winfo_screenheight() // 2) - (alto // 2)
-        ventana.geometry(f"{tamanio}+{x}+{y}")
-    
+                self.horario_combobox.set("")
+                messagebox.showinfo("Éxito", "Cita agendada")
+            else:
+                messagebox.showerror("Error", "Horario no válido")
+        except Exception as e: messagebox.showerror("Error", str(e))
+
     def eliminar_cita(self):
-        seleccionado = self.tree.selection()
-        if not seleccionado:
-            messagebox.showerror("Error", "Seleccione una cita")
-            return
-        
-        item = seleccionado[0]
-        valores = self.tree.item(item, "values")
-        
-        if messagebox.askyesno("Confirmar", f"¿Está seguro de eliminar la cita de {valores[1]}?"):
+        sel = self.tree.selection()
+        if not sel: return
+        item = sel[0]
+        val = self.tree.item(item, "values")
+        if messagebox.askyesno("Confirmar", f"¿Cancelar cita de {val[1]}?"):
             try:
-                self.cita.eliminar(valores[0])
+                self.cita.eliminar(val[0])
                 self.actualizar_lista()
-                messagebox.showinfo("Éxito", "Cita eliminada correctamente")
-            except Exception as e:
-                messagebox.showerror("Error", str(e))
-    
-    def volver_principal(self):
-        self.ventana.attributes('-fullscreen', False)
-        self.ventana.destroy()
-        self.ventana_principal.deiconify()
+            except Exception as e: messagebox.showerror("Error", str(e))
+
+    def editar_cita(self):
+        
+        sel = self.tree.selection()
+        if not sel: return messagebox.showerror("Error", "Seleccione una cita")
+        val = self.tree.item(sel[0], "values")
+        id_cita = val[0]
+        
+        popup = ctk.CTkToplevel(self)
+        popup.title("Editar Cita")
+        popup.after(200, lambda: popup.iconbitmap("apple.ico"))
+        popup.geometry("400x400")
+        popup.grab_set()
+        popup.configure(fg_color=self.tema.colores["blanco"])
+        
+        self.tema.crear_subtitulo(popup, f"Editando cita de {val[1]}").pack(pady=20)
+        
+        # Buscar ID paciente actual (lógica simplificada para ejemplo)
+        pacientes = self.paciente_model.obtener_todos(self.id_admin)
+        id_paciente_actual = next((p['id_paciente'] for p in pacientes if p['nombre'] == val[1]), None)
+
+        f_entry = self.tema.crear_entrada(popup, "Fecha", 300)
+        f_entry.insert(0, val[5])
+        f_entry.pack(pady=10)
+        
+        h_combo = ctk.CTkComboBox(popup, values=[], width=300, dropdown_fg_color="white", dropdown_text_color="black", 
+                                                 button_color=self.tema.colores["gris_claro"],
+                                                 button_hover_color=self.tema.colores["gris_contraste"],
+                                                 border_color=self.tema.colores["gris_claro"])
+        h_combo.pack(pady=10)
+        
+        def act_horas(e=None):
+            f = f_entry.get()
+            if Validaciones.validar_fecha(f):
+                h = [x['hora'] for x in self.cita.obtener_horarios_disponibles_por_fecha(f)]
+                h_combo.configure(values=h)
+                if val[4] in h: h_combo.set(val[4]) # Mantener hora original si posible
+        
+        f_entry.bind('<KeyRelease>', act_horas)
+        act_horas()
+        
+        def guardar():
+            nf, nh = f_entry.get(), h_combo.get()
+            if not nh: return messagebox.showerror("Error", "Seleccione hora")
+            try:
+                # Buscar ID horario
+                hs = self.cita.obtener_horarios_disponibles_por_fecha(nf)
+                idh = next((x['id_horario'] for x in hs if x['hora'] == nh), None)
+                if idh:
+                    self.cita.actualizar(id_cita, id_paciente_actual, idh, nf, nh)
+                    self.actualizar_lista()
+                    popup.destroy()
+                    messagebox.showinfo("Éxito", "Cita reprogramada")
+            except Exception as e: messagebox.showerror("Error", str(e))
+
+        self.tema.crear_boton_primario(popup, "Guardar Cambios", guardar, 200).pack(pady=20)

@@ -5,17 +5,19 @@ class Configuracion:
         "blanco": "#FFFFFF",
         "negro": "#000000",
         "rojo": "#BD4941",
+        "rojo_claro": "#F3BFBB",
         "rojo_hover": "#9B3A47",
-        "gris": "#4C6140",
-        "gris_claro": "#C5D1BD"
+        "gris": "#234128",
+        "gris_claro": "#C5D1BD",
+        "gris_contraste": "#9EB69B",
     }
     
     FUENTES = {
-        "titulo": ("Roboto Medium", 24),
-        "subtitulo": ("Roboto", 18),
-        "normal": ("Roboto", 14),
-        "boton": ("Roboto Medium", 14),
-        "pequeno": ("Roboto", 11)
+        "titulo": ("Helvetica", 24, "bold"),
+        "subtitulo": ("Helvetica", 18),
+        "normal": ("Helvetica", 14),
+        "boton": ("Helvetica Medium", 14),
+        "pequeno": ("Helvetica", 11)
     }
     
     BASE_DATOS = {

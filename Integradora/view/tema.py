@@ -1,4 +1,5 @@
 import customtkinter as ctk
+from tkinter import ttk
 from configuracion import Configuracion
 
 class Tema:
@@ -77,4 +78,41 @@ class Tema:
             text=texto,
             font=self.fuentes["pequeno"],
             text_color=self.colores["negro"]
+        )
+    
+    def configurar_estilo_tablas(self):
+        style = ttk.Style()
+        
+        style.theme_use("clam") 
+
+        style.configure(
+            "Treeview",
+            background=self.colores["blanco"],
+            foreground=self.colores["negro"],
+            fieldbackground=self.colores["blanco"], # Fondo cuando no hay filas
+            borderwidth=0,
+            rowheight=35,           # Filas más altas para mejor legibilidad
+            font=("Helvetica", 12)      # Fuente más limpia y grande
+        )
+        
+        style.layout("Treeview", [('Treeview.treearea', {'sticky': 'nswe'})]) 
+
+        style.map(
+            "Treeview",
+            background=[('selected', self.colores["verde_hover"])], # Verde oscuro al seleccionar
+            foreground=[('selected', self.colores["blanco"])]       # Texto blanco al seleccionar
+        )
+
+        style.configure(
+            "Treeview.Heading",
+            background=self.colores["verde"],       # Fondo Verde Corporativo
+            foreground=self.colores["blanco"],      # Texto Blanco
+            relief="flat",                          # Sin bordes 3D anticuados
+            font=("Helvetica", 12, "bold"),             # Negrita
+            padding=(10, 5)                         # Espacio interno
+        )
+        
+        style.map(
+            "Treeview.Heading",
+            background=[('active', self.colores["verde_hover"])] 
         )

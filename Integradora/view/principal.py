@@ -1,138 +1,136 @@
 import customtkinter as ctk
 from tkinter import messagebox
 from view.tema import Tema
-from view.pacientes import VentanaPacientes
-from view.citas import VentanaCitas
-from view.admins import VentanaAdmins
-from view.ingresos import VentanaIngresos
-from configuracion import Configuracion
+from view.pacientes import VistaPacientes
+from view.citas import VistaCitas
+from view.admins import VistaAdmins
+from view.ingresos import VistaIngresos
 from model.administrador import Administrador
+from tkinter import PhotoImage
 
 class VentanaPrincipal:
-    def __init__(self, ventana_login, correo_admin, id_admin):
-        self.ventana_login = ventana_login
+    def __init__(self, root, correo_admin, id_admin, logout_callback): # <--- Nuevo parámetro
+        self.root = root
         self.correo_admin = correo_admin
         self.id_admin = id_admin
+        self.logout_callback = logout_callback # <--- Guardamos la función para usarla luego
         self.tema = Tema()
         self.administrador = Administrador()
         
-        self.root = ctk.CTkToplevel(ventana_login)
-        self.root.title("Sistema Nutriólogo - Principal")
+        self.root.title("NutriSystem - Panel Principal")
         
-        ancho_pantalla = self.root.winfo_screenwidth()
-        alto_pantalla = self.root.winfo_screenheight()
-        self.root.geometry(f"{ancho_pantalla}x{alto_pantalla}+0+0")
+        # Icono
+        # Metodo 1
+        self.root.wm_iconbitmap("apple.ico")
+        # Metodo 2
+        icon_img = PhotoImage(file="apple.png")
+        self.root.iconphoto(False, icon_img)
+        
+        # Configurar pantalla completa
+        ancho = self.root.winfo_screenwidth()
+        alto = self.root.winfo_screenheight()
+        self.root.geometry(f"{ancho}x{alto}+0+0")
         self.root.attributes('-fullscreen', True)
         
-        self.root.configure(fg_color=self.tema.colores["blanco"])
-        self.root.protocol("WM_DELETE_WINDOW", self.cerrar_sesion)
-        
-        # Configurar atajo de teclado para salir de pantalla completa (Esc)
+        # Atajo Esc para salir
         self.root.bind('<Escape>', lambda e: self.cerrar_sesion())
         
-        self.ventana_pacientes = None
-        self.ventana_citas = None
-        self.ventana_admins = None
-        self.ventana_ingresos = None
-        
-        self.configurar_interfaz()
-        self.root.focus_set()
-    
-    def configurar_interfaz(self):
-        # Header más grande para pantalla completa
-        header_frame = ctk.CTkFrame(self.root, fg_color=self.tema.colores["verde"], height=140)
-        header_frame.pack(fill="x", padx=20, pady=20)
-        header_frame.pack_propagate(False)
-        
-        titulo = ctk.CTkLabel(
-            header_frame,
-            text="🍎 Sistema Nutriólogo - Panel Principal",
-            font=("Roboto", 32, "bold"),
-            text_color=self.tema.colores["blanco"]
-        )
-        titulo.pack(pady=30)
-        
-        nombre_admin = self.administrador.obtener_nombre_administrador(self.correo_admin)
-        info_frame = ctk.CTkFrame(header_frame, fg_color="transparent")
-        info_frame.pack(side="right", padx=30)
-        
-        usuario_label = ctk.CTkLabel(
-            info_frame,
-            text=f"Bienvenido: {nombre_admin}",
-            font=("Roboto Medium", 16),
-            text_color=self.tema.colores["blanco"]
-        )
-        usuario_label.pack()
-        
-        # Frame principal más grande
-        main_frame = ctk.CTkFrame(self.root, fg_color=self.tema.colores["blanco"], border_color=self.tema.colores["gris_claro"], border_width=2, corner_radius=10)
-        main_frame.pack(fill="both", expand=True, padx=40, pady=40)
-        
-        botones_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
-        botones_frame.pack(expand=True)
-        
-        # Botones más grandes para pantalla completa
-        self.titulo_principal = self.tema.crear_titulo(botones_frame, "Acciones")
-        self.titulo_principal.pack(pady=(0,20))
+        self.vista_actual = None
+        self.configurar_layout()
+        self.mostrar_vista("pacientes")
 
-        self.boton_pacientes = self.tema.crear_boton_primario(
-            botones_frame, 
-            "👥 GESTIONAR PACIENTES", 
-            self.abrir_pacientes,
-            400
+    def configurar_layout(self):
+        # --- MENÚ LATERAL (SIDEBAR) ---
+        self.sidebar_frame = ctk.CTkFrame(self.root, width=300, corner_radius=0, fg_color=self.tema.colores["verde"])
+        self.sidebar_frame.pack(side="left", fill="y")
+        self.sidebar_frame.pack_propagate(False) # Forzar ancho fijo
+
+        # Logo / Título Sidebar
+        logo_label = ctk.CTkLabel(
+            self.sidebar_frame, 
+            text="🍎\nNutriSystem", 
+            font=("Helvetica", 24, "bold"),
+            text_color=self.tema.colores["blanco"]
         )
-        self.boton_pacientes.pack(pady=15)
+        logo_label.pack(pady=(40, 20))
+
+        # Info Usuario
+        nombre_admin = self.administrador.obtener_nombre_administrador(self.correo_admin)
+        # Tomar solo el primer nombre para que quepa bien
+        primer_nombre = nombre_admin.split(" ")[0] if nombre_admin else "Admin"
         
-        self.boton_citas = self.tema.crear_boton_primario(
-            botones_frame, 
-            "📅 GESTIONAR CITAS", 
-            self.abrir_citas,
-            400
+        user_label = ctk.CTkLabel(
+            self.sidebar_frame,
+            text=f"Consultorio Dr. Angel Medina",
+            font=("Helvetica", 16),
+            text_color=self.tema.colores["blanco"]
         )
-        self.boton_citas.pack(pady=15)
+        user_label.pack(pady=(0, 30))
+
+        self.tema.crear_texto_pequeno(self.root, f"Usuario: {primer_nombre}").pack(pady=(10,0))
         
-        self.boton_ingresos = self.tema.crear_boton_primario(
-            botones_frame, 
-            "💰 CONTROL DE INGRESOS", 
-            self.abrir_ingresos,
-            400
-        )
-        self.boton_ingresos.pack(pady=15)
+        # Botones de Navegación
+        self.crear_boton_menu("👥 Pacientes", "pacientes")
+        self.crear_boton_menu("📅 Citas", "citas")
+        self.crear_boton_menu("💰 Ingresos", "ingresos")
+        self.crear_boton_menu("👤 Administradores", "admins")
         
-        self.boton_admins = self.tema.crear_boton_primario(
-            botones_frame, 
-            "👤 GESTIONAR ADMINISTRADORES", 
-            self.abrir_admins,
-            400
+        # Espaciador
+        ctk.CTkLabel(self.sidebar_frame, text="").pack(expand=True)
+
+        # Botón Salir
+        btn_salir = ctk.CTkButton(
+            self.sidebar_frame,
+            text="🚪 Cerrar Sesión",
+            command=self.cerrar_sesion,
+            fg_color=self.tema.colores["rojo"],
+            hover_color=self.tema.colores["rojo_hover"],
+            text_color=self.tema.colores["blanco"],
+            corner_radius=10,
+            font=("Helvetica", 14, "bold"),
+            height=40,
+            anchor="center"
         )
-        self.boton_admins.pack(pady=15)
+        btn_salir.pack(pady=40, padx=20, fill="x")
+
+        # --- ÁREA DE CONTENIDO PRINCIPAL ---
+        self.main_content = ctk.CTkFrame(self.root, fg_color=self.tema.colores["blanco"], corner_radius=0)
+        self.main_content.pack(side="right", fill="both", expand=True)
+
+    def crear_boton_menu(self, texto, vista_key):
+        btn = ctk.CTkButton(
+            self.sidebar_frame,
+            text=texto,
+            command=lambda: self.mostrar_vista(vista_key),
+            fg_color=self.tema.colores["verde"],
+            text_color=self.tema.colores["blanco"],
+            hover_color=self.tema.colores["verde_hover"],
+            font=("Helvetica", 16, "bold"),
+            corner_radius=0,
+            height=50,
+            anchor="center"
+        )
+        btn.pack(fill="x", padx=0, pady=20)
+
+    def mostrar_vista(self, vista_key):
+        # Eliminar la vista anterior
+        if self.vista_actual:
+            self.vista_actual.destroy()
         
-        self.boton_salir = self.tema.crear_boton_secundario(
-            botones_frame,
-            "🚪 CERRAR SESIÓN",
-            self.cerrar_sesion,
-            400
-        )
-        self.boton_salir.pack(pady=20)
-    
-    def abrir_pacientes(self):
-        self.root.withdraw() 
-        self.ventana_pacientes = VentanaPacientes(self.root, self.id_admin)
-    
-    def abrir_citas(self):
-        self.root.withdraw()  
-        self.ventana_citas = VentanaCitas(self.root, self.id_admin)
-    
-    def abrir_admins(self):
-        self.root.withdraw()  
-        self.ventana_admins = VentanaAdmins(self.root, self.id_admin)
-    
-    def abrir_ingresos(self):
-        self.root.withdraw()  
-        self.ventana_ingresos = VentanaIngresos(self.root, self.id_admin)
-    
+        # Crear la nueva vista dentro del main_content
+        if vista_key == "pacientes":
+            self.vista_actual = VistaPacientes(self.main_content, self.id_admin)
+        elif vista_key == "citas":
+            self.vista_actual = VistaCitas(self.main_content, self.id_admin)
+        elif vista_key == "admins":
+            self.vista_actual = VistaAdmins(self.main_content, self.id_admin)
+        elif vista_key == "ingresos":
+            self.vista_actual = VistaIngresos(self.main_content, self.id_admin)
+            
+        # Empaquetar la vista para que ocupe todo el espacio
+        self.vista_actual.pack(fill="both", expand=True, padx=20, pady=20)
+
     def cerrar_sesion(self):
         if messagebox.askyesno("Confirmar", "¿Está seguro que desea cerrar sesión?"):
-            self.root.attributes('-fullscreen', False)
-            self.root.destroy()
-            self.ventana_login.deiconify()
+            if self.logout_callback:
+                self.logout_callback()

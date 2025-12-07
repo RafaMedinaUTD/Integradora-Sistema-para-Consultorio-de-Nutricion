@@ -3,265 +3,142 @@ from tkinter import ttk, messagebox
 from datetime import datetime
 from model.ingreso import Ingreso
 from view.tema import Tema
-from configuracion import Configuracion
 
-class VentanaIngresos:
-    def __init__(self, ventana_principal, id_admin):
-        self.ventana_principal = ventana_principal
+class VistaIngresos(ctk.CTkFrame):
+    def __init__(self, parent, id_admin):
+        super().__init__(parent)
         self.id_admin = id_admin
         self.ingreso = Ingreso()
         self.tema = Tema()
-        
-        self.ventana = ctk.CTkToplevel(ventana_principal)
-        self.ventana.title("Gestión de Ingresos")
-        
-        # Configurar pantalla completa
-        ancho_pantalla = self.ventana.winfo_screenwidth()
-        alto_pantalla = self.ventana.winfo_screenheight()
-        self.ventana.geometry(f"{ancho_pantalla}x{alto_pantalla}+0+0")
-        self.ventana.attributes('-fullscreen', True)
-        
-        self.ventana.configure(fg_color=self.tema.colores["blanco"])
-        self.ventana.protocol("WM_DELETE_WINDOW", self.volver_principal)
-        
-        # Configurar atajo de teclado para salir de pantalla completa (Esc)
-        self.ventana.bind('<Escape>', lambda e: self.volver_principal())
+        self.configure(fg_color=self.tema.colores["blanco"])
         
         self.configurar_interfaz()
         self.actualizar_lista()
-        self.ventana.focus_set()
     
     def configurar_interfaz(self):
-        header_frame = ctk.CTkFrame(self.ventana, fg_color=self.tema.colores["verde"], height=100)
-        header_frame.pack(fill="x", padx=20, pady=20)
-        header_frame.pack_propagate(False)
-        
-        titulo = ctk.CTkLabel(
-            header_frame,
-            text="Gestión de Ingresos Diarios",
-            font=("Arial", 28, "bold"),
-            text_color=self.tema.colores["blanco"]
-        )
-        titulo.pack(pady=25)
-        
-        # Frame para fecha actual
-        fecha_frame = ctk.CTkFrame(self.ventana)
-        fecha_frame.pack(fill="x", padx=20, pady=10)
+        titulo = ctk.CTkLabel(self, text="Gestión de Ingresos Diarios", font=("Arial", 28, "bold"), text_color=self.tema.colores["verde"])
+        titulo.pack(pady=20)
         
         fecha_hoy = datetime.now().strftime("%d/%m/%Y")
-        fecha_label = ctk.CTkLabel(
-            fecha_frame,
-            text=f"📅 Fecha: {fecha_hoy}",
-            font=("Arial", 18, "bold"),
-            text_color=self.tema.colores["verde"]
-        )
-        fecha_label.pack(pady=10)
+        ctk.CTkLabel(self, text=f"📅 Fecha: {fecha_hoy}", font=("Arial", 18, "bold"), text_color=self.tema.colores["verde"]).pack(pady=5)
         
-        form_frame = ctk.CTkFrame(self.ventana)
-        self.tema.aplicar_tema_frame(form_frame)
-        form_frame.pack(fill="x", padx=20, pady=15)
+        form = ctk.CTkFrame(self)
+        self.tema.aplicar_tema_frame(form)
+        form.pack(fill="x", padx=20, pady=10)
         
-        self.texto_concepto = self.tema.crear_texto_pequeno(form_frame, "Concepto:")
-        self.texto_concepto.pack(side="left", padx=15)
-        self.concepto_entry = self.tema.crear_entrada(form_frame, "Ej: Consulta, Producto, etc.", 300)
-        self.concepto_entry.pack(side="left", padx=15, pady=15)
+        self.tema.crear_texto_pequeno(form, "Concepto:").pack(side="left", padx=10)
+        self.concepto_entry = self.tema.crear_entrada(form, "Consulta...", 250)
+        self.concepto_entry.pack(side="left", padx=10, pady=10)
         
-        self.texto_monto = self.tema.crear_texto_pequeno(form_frame, "Monto ($):")
-        self.texto_monto.pack(side="left", padx=15)
-        self.monto_entry = self.tema.crear_entrada(form_frame, "0.00", 150)
-        self.monto_entry.pack(side="left", padx=15, pady=15)
+        self.tema.crear_texto_pequeno(form, "Monto ($):").pack(side="left", padx=10)
+        self.monto_entry = self.tema.crear_entrada(form, "0.00", 100)
+        self.monto_entry.pack(side="left", padx=10, pady=10)
         
-        self.boton_agregar = self.tema.crear_boton_primario(form_frame, "➕ AGREGAR INGRESO", self.agregar_ingreso, 200)
-        self.boton_agregar.pack(side="left", padx=15, pady=15)
+        self.tema.crear_boton_primario(form, "➕ Registrar", self.agregar_ingreso, 150).pack(side="left", padx=20, pady=10)
         
-        # Frame para estadísticas
-        stats_frame = ctk.CTkFrame(self.ventana)
-        stats_frame.pack(fill="x", padx=20, pady=10)
-        
-        self.total_label = ctk.CTkLabel(
-            stats_frame,
-            text="Total de ingresos hoy: $0.00",
-            font=("Arial", 18, "bold"),
-            text_color=self.tema.colores["verde"]
-        )
+        self.total_label = ctk.CTkLabel(self, text="Total hoy: $0.00", font=("Arial", 18, "bold"), text_color=self.tema.colores["verde"])
         self.total_label.pack(pady=10)
         
-        self.tree_frame = ctk.CTkFrame(self.ventana)
-        self.tree_frame.pack(fill="both", expand=True, padx=20, pady=15)
+        self.tree_frame = ctk.CTkFrame(self)
+        self.tree_frame.pack(fill="both", expand=True, padx=20, pady=10)
         
-        self.tree = ttk.Treeview(self.tree_frame, columns=("ID", "Concepto", "Monto", "Hora"), show="headings", height=20)
-        self.tree.heading("ID", text="ID")
-        self.tree.heading("Concepto", text="Concepto")
-        self.tree.heading("Monto", text="Monto ($)")
-        self.tree.heading("Hora", text="Hora")
-        self.tree.column("ID", width=80)
+        self.tree = ttk.Treeview(self.tree_frame, columns=("ID", "Concepto", "Monto", "Hora"), show="headings", height=15)
+        self.tree.heading("ID", text="ID"); self.tree.column("ID", width=50)
+        self.tree.heading("Concepto", text="Concepto"); self.tree.column("Concepto", width=300)
+        self.tree.heading("Monto", text="Monto"); self.tree.column("Monto", width=100)
+        self.tree.heading("Hora", text="Hora"); self.tree.column("Hora", width=100)
+
+        self.tree.column("ID", width=50, anchor="center")
         self.tree.column("Concepto", width=400)
-        self.tree.column("Monto", width=150)
-        self.tree.column("Hora", width=150)
+        self.tree.column("Monto", width=150, anchor="e")
+        self.tree.column("Hora", width=150, anchor="center")
+
+        self.tree.tag_configure("impar", background=self.tema.colores["gris_claro"]) #NUEVO
+        self.tree.tag_configure("par", background=self.tema.colores["blanco"]) #NUEVO
         
-        scrollbar = ttk.Scrollbar(self.tree_frame, orient="vertical", command=self.tree.yview)
-        self.tree.configure(yscrollcommand=scrollbar.set)
-        
+        sb = ttk.Scrollbar(self.tree_frame, orient="vertical", command=self.tree.yview)
+        self.tree.configure(yscrollcommand=sb.set)
         self.tree.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
+        sb.pack(side="right", fill="y")
         
-        button_frame = ctk.CTkFrame(self.ventana)
-        button_frame.pack(fill="x", padx=20, pady=15)
+        btns = ctk.CTkFrame(self, fg_color="transparent")
+        btns.pack(fill="x", padx=20, pady=10)
         
-        self.boton_volver = self.tema.crear_boton_primario(button_frame, "← VOLVER AL MENÚ", self.volver_principal, 250)
-        self.boton_volver.pack(side="left", padx=10)
-        
-        self.boton_editar = self.tema.crear_boton_primario(button_frame, "✏️ EDITAR INGRESO", self.editar_ingreso, 200)
-        self.boton_editar.pack(side="left", padx=10)
-        
-        self.boton_eliminar = self.tema.crear_boton_secundario(button_frame, "🗑️ ELIMINAR INGRESO", self.eliminar_ingreso, 200)
-        self.boton_eliminar.pack(side="left", padx=10)
-        
-        self.boton_reiniciar = self.tema.crear_boton_secundario(button_frame, "🔄 REINICIAR DÍA", self.reiniciar_dia, 200)
-        self.boton_reiniciar.pack(side="left", padx=10)
-        
-        self.boton_actualizar = self.tema.crear_boton_primario(button_frame, "🔄 ACTUALIZAR LISTA", self.actualizar_lista, 200)
-        self.boton_actualizar.pack(side="right", padx=10)
-    
+        self.tema.crear_boton_primario(btns, "✏️ Editar", self.editar_ingreso, 150).pack(side="left", padx=10)
+        self.tema.crear_boton_secundario(btns, "🗑️ Eliminar", self.eliminar_ingreso, 150).pack(side="left", padx=10)
+        self.tema.crear_boton_secundario(btns, "🔄 Reiniciar Día", self.reiniciar_dia, 150).pack(side="left", padx=10)
+        self.tema.crear_boton_primario(btns, "🔄 Refrescar", self.actualizar_lista, 150).pack(side="right", padx=10)
+
     def actualizar_lista(self):
-        for item in self.tree.get_children():
-            self.tree.delete(item)
-        
+        for i in self.tree.get_children(): self.tree.delete(i)
         try:
             ingresos = self.ingreso.obtener_todos_hoy(self.id_admin)
             total = 0
-            for ing in ingresos:
-                # Formatear hora
+            for i, ing in enumerate(ingresos):
+                tag = "impar" if i % 2 != 0 else "par"
                 hora_formateada = str(ing['hora'])[:5] if ing['hora'] else "00:00"
+                monto = float(ing['monto'])
+                
                 self.tree.insert("", "end", values=(
                     ing["id_ingreso"],
                     ing["concepto"],
-                    f"${float(ing['monto']):.2f}",
+                    f"${monto:.2f}",
                     hora_formateada
-                ))
-                total += float(ing['monto'])
+                ), tags=(tag,))
+                total += monto
             
             self.total_label.configure(text=f"Total de ingresos hoy: ${total:.2f}")
-        except Exception as e:
-            messagebox.showerror("Error", f"Error al cargar ingresos: {str(e)}")
-    
+        except Exception as e: messagebox.showerror("Error", str(e))
+
     def agregar_ingreso(self):
-        concepto = self.concepto_entry.get()
-        monto = self.monto_entry.get()
-        
-        if not concepto or not monto:
-            messagebox.showerror("Error", "Concepto y monto son obligatorios")
-            return
-        
+        c = self.concepto_entry.get()
+        m = self.monto_entry.get()
+        if not c or not m: return messagebox.showerror("Error", "Datos incompletos")
         try:
-            monto_float = float(monto)
-            if monto_float <= 0:
-                messagebox.showerror("Error", "El monto debe ser mayor a 0")
-                return
-        except ValueError:
-            messagebox.showerror("Error", "El monto debe ser un número válido")
-            return
-        
-        try:
-            self.ingreso.crear(concepto, monto, self.id_admin)
+            if float(m) <= 0: raise ValueError
+            self.ingreso.crear(c, m, self.id_admin)
             self.actualizar_lista()
-            self.concepto_entry.delete(0, "end")
-            self.monto_entry.delete(0, "end")
-            messagebox.showinfo("Éxito", "Ingreso agregado correctamente")
-        except Exception as e:
-            messagebox.showerror("Error", str(e))
-    
-    def editar_ingreso(self):
-        seleccionado = self.tree.selection()
-        if not seleccionado:
-            messagebox.showerror("Error", "Seleccione un ingreso")
-            return
-        
-        item = seleccionado[0]
-        valores = self.tree.item(item, "values")
-        
-        ventana_editar = ctk.CTkToplevel(self.ventana)
-        ventana_editar.title("Editar Ingreso")
-        ventana_editar.geometry("400x300")
-        ventana_editar.resizable(False, False)
-        ventana_editar.grab_set()
-        self.centrar_ventana_secundaria(ventana_editar, "400x300")
-        
-        titulo = self.tema.crear_subtitulo(ventana_editar, "Editar Ingreso")
-        titulo.pack(pady=20)
-        
-        concepto_entry = self.tema.crear_entrada(ventana_editar, "Concepto", 300)
-        concepto_entry.insert(0, valores[1])
-        concepto_entry.pack(pady=10)
-        
-        monto_entry = self.tema.crear_entrada(ventana_editar, "Monto", 300)
-        monto_text = valores[2].replace("$", "")
-        monto_entry.insert(0, monto_text)
-        monto_entry.pack(pady=10)
-        
-        def guardar_cambios():
-            nuevo_concepto = concepto_entry.get()
-            nuevo_monto = monto_entry.get()
-            
-            if not nuevo_concepto or not nuevo_monto:
-                messagebox.showerror("Error", "Concepto y monto son obligatorios")
-                return
-            
-            try:
-                monto_float = float(nuevo_monto)
-                if monto_float <= 0:
-                    messagebox.showerror("Error", "El monto debe ser mayor a 0")
-                    return
-            except ValueError:
-                messagebox.showerror("Error", "El monto debe ser un número válido")
-                return
-            
-            try:
-                self.ingreso.actualizar(valores[0], nuevo_concepto, nuevo_monto)
-                self.actualizar_lista()
-                ventana_editar.destroy()
-                messagebox.showinfo("Éxito", "Ingreso actualizado correctamente")
-            except Exception as e:
-                messagebox.showerror("Error", str(e))
-        
-        boton_guardar = self.tema.crear_boton_primario(ventana_editar, "💾 GUARDAR", guardar_cambios, 200)
-        boton_guardar.pack(pady=15)
-    
-    def centrar_ventana_secundaria(self, ventana, tamanio):
-        ventana.update_idletasks()
-        ancho = int(tamanio.split('x')[0])
-        alto = int(tamanio.split('x')[1])
-        x = (ventana.winfo_screenwidth() // 2) - (ancho // 2)
-        y = (ventana.winfo_screenheight() // 2) - (alto // 2)
-        ventana.geometry(f"{tamanio}+{x}+{y}")
-    
+            self.concepto_entry.delete(0, "end"); self.monto_entry.delete(0, "end")
+        except: messagebox.showerror("Error", "Monto inválido")
+
     def eliminar_ingreso(self):
-        seleccionado = self.tree.selection()
-        if not seleccionado:
-            messagebox.showerror("Error", "Seleccione un ingreso")
-            return
-        
-        item = seleccionado[0]
-        valores = self.tree.item(item, "values")
-        
-        if messagebox.askyesno("Confirmar", f"¿Está seguro de eliminar el ingreso: {valores[1]}?"):
-            try:
-                self.ingreso.eliminar(valores[0])
+        sel = self.tree.selection()
+        if not sel: return
+        val = self.tree.item(sel[0], "values")
+        if messagebox.askyesno("Confirmar", f"¿Eliminar ingreso: {val[1]}?"):
+            try: 
+                self.ingreso.eliminar(val[0])
                 self.actualizar_lista()
-                messagebox.showinfo("Éxito", "Ingreso eliminado correctamente")
-            except Exception as e:
-                messagebox.showerror("Error", str(e))
-    
+            except Exception as e: messagebox.showerror("Error", str(e))
+
     def reiniciar_dia(self):
-        if messagebox.askyesno("Confirmar", "⚠️ ¿Está seguro de reiniciar el día?\n\nEsta acción eliminará TODOS los ingresos registrados hoy y no se puede deshacer."):
+        if messagebox.askyesno("PELIGRO", "¿Borrar TODOS los ingresos de hoy?"):
             try:
                 self.ingreso.eliminar_todos_hoy(self.id_admin)
                 self.actualizar_lista()
-                messagebox.showinfo("Éxito", "Ingresos del día reiniciados correctamente")
-            except Exception as e:
-                messagebox.showerror("Error", str(e))
-    
-    def volver_principal(self):
-        self.ventana.attributes('-fullscreen', False)
-        self.ventana.destroy()
-        self.ventana_principal.deiconify()
+            except Exception as e: messagebox.showerror("Error", str(e))
+            
+    def editar_ingreso(self):
+        sel = self.tree.selection()
+        if not sel: return messagebox.showerror("Error", "Seleccione un ingreso")
+        val = self.tree.item(sel[0], "values")
+        
+        popup = ctk.CTkToplevel(self)
+        popup.title("Editar Ingreso")
+        popup.after(200, lambda: popup.iconbitmap("apple.ico"))
+        popup.geometry("300x300")
+        popup.grab_set()
+        popup.configure(fg_color="white")
+        
+        self.tema.crear_subtitulo(popup, "Editar Ingreso").pack(pady=10)
+        ce = self.tema.crear_entrada(popup, "Concepto", 200); ce.insert(0, val[1]); ce.pack(pady=5)
+        me = self.tema.crear_entrada(popup, "Monto", 200); me.insert(0, val[2].replace("$","")); me.pack(pady=5)
+        
+        def guardar():
+            try:
+                self.ingreso.actualizar(val[0], ce.get(), me.get())
+                self.actualizar_lista()
+                popup.destroy()
+            except Exception as e: messagebox.showerror("Error", str(e))
+            
+        self.tema.crear_boton_primario(popup, "Guardar", guardar, 150).pack(pady=10)
