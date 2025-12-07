@@ -1,3 +1,15 @@
+"""
+NustriSystem v.0.6
+
+Changelog:
+
+    - Agregado un Changelog.
+    - Agregados comentarios a todos los modulos para la facilidad de navegacion.
+    - Eliminado el modulo "registro.py" remplazado por "admins.py".
+    - Version de la aplicacion mostrada en la parte superior de la ventana principal.
+
+"""
+
 import customtkinter as ctk
 from view.login import LoginApp
 import ctypes

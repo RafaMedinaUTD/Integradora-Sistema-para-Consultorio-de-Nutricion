@@ -1,3 +1,5 @@
+# Modulo encargado de controlar la interfaz de administradores.
+
 import customtkinter as ctk
 from tkinter import ttk, messagebox
 from model.administrador import Administrador
@@ -11,13 +13,12 @@ class VistaAdmins(ctk.CTkFrame):
         self.administrador = Administrador()
         self.tema = Tema()
         
-        # Configuración visual del Frame
         self.configure(fg_color=self.tema.colores["blanco"])
         
         self.configurar_interfaz()
         self.actualizar_lista()
     
-    def configurar_interfaz(self):
+    def configurar_interfaz(self): # Metodo encargado de configurar la interfaz.
         # Título de la sección
         titulo = ctk.CTkLabel(
             self,
@@ -27,12 +28,13 @@ class VistaAdmins(ctk.CTkFrame):
         )
         titulo.pack(pady=20)
         
-        # --- Formulario de Registro Rápido ---
+        # --- Campos de entrada para Formulario ---
+
+        # Frame De Formulario
         form_frame = ctk.CTkFrame(self)
         self.tema.aplicar_tema_frame(form_frame)
         form_frame.pack(fill="x", padx=20, pady=10)
-        
-        # Fila 1: Campos de entrada
+
         # Nombre
         self.tema.crear_texto_pequeno(form_frame, "Nombre:").pack(side="left", padx=10)
         self.nombre_entry = self.tema.crear_entrada(form_frame, "Nombre completo", 200)
@@ -59,6 +61,8 @@ class VistaAdmins(ctk.CTkFrame):
         self.boton_agregar.pack(side="left", padx=20, pady=15)
         
         # --- Tabla de Administradores ---
+
+        # Vista de administradores en lista
         self.tree_frame = ctk.CTkFrame(self)
         self.tree_frame.pack(fill="both", expand=True, padx=20, pady=15)
         
@@ -76,9 +80,10 @@ class VistaAdmins(ctk.CTkFrame):
         self.tree.column("Correo", width=200)
         self.tree.column("Estado", width=80, anchor="center")
 
-        self.tree.tag_configure("impar", background=self.tema.colores["gris_claro"]) #NUEVO
-        self.tree.tag_configure("par", background=self.tema.colores["blanco"]) #NUEVO
+        self.tree.tag_configure("impar", background=self.tema.colores["gris_claro"])
+        self.tree.tag_configure("par", background=self.tema.colores["blanco"])
         
+        # Scrollbar para lista
         scrollbar = ttk.Scrollbar(self.tree_frame, orient="vertical", command=self.tree.yview)
         self.tree.configure(yscrollcommand=scrollbar.set)
         
@@ -86,22 +91,28 @@ class VistaAdmins(ctk.CTkFrame):
         scrollbar.pack(side="right", fill="y")
         
         # --- Botones de Acción ---
+
+        # Frame para botones
         button_frame = ctk.CTkFrame(self, fg_color="transparent")
         button_frame.pack(fill="x", padx=20, pady=15)
         
+        # Botón Editar
         self.boton_editar = self.tema.crear_boton_primario(button_frame, "✏️ Editar", self.editar_admin, 150)
         self.boton_editar.pack(side="left", padx=10)
         
+        # Botón Reactivar
         self.boton_reactivar = self.tema.crear_boton_primario(button_frame, "🔄 Reactivar", self.reactivar_admin, 150)
         self.boton_reactivar.pack(side="left", padx=10)
-
+        
+        # Botón Eliminar
         self.boton_eliminar = self.tema.crear_boton_secundario(button_frame, "🗑️ Eliminar", self.eliminar_admin, 150)
         self.boton_eliminar.pack(side="left", padx=10)
         
+        # Botón Actualizar
         self.boton_actualizar = self.tema.crear_boton_primario(button_frame, "🔄 Refrescar Lista", self.actualizar_lista, 150)
         self.boton_actualizar.pack(side="right", padx=10)
     
-    def actualizar_lista(self):
+    def actualizar_lista(self): # Metodo encargado de actualizar la lista dentro de la interfaz.
         for item in self.tree.get_children():
             self.tree.delete(item)
         
@@ -121,7 +132,7 @@ class VistaAdmins(ctk.CTkFrame):
         except Exception as e:
             messagebox.showerror("Error", f"Error al cargar administradores: {str(e)}")
     
-    def agregar_admin(self):
+    def agregar_admin(self): # Metodo encargado de agregar nuevos administradores dentro de la interfaz.
         nombre = self.nombre_entry.get()
         telefono = self.telefono_entry.get()
         correo = self.correo_entry.get()
@@ -151,7 +162,7 @@ class VistaAdmins(ctk.CTkFrame):
         except Exception as e:
             messagebox.showerror("Error", str(e))
     
-    def editar_admin(self):
+    def editar_admin(self): # Metodo encargado de editar administradores existentes dentro de la interfaz.
         seleccionado = self.tree.selection()
         if not seleccionado:
             messagebox.showerror("Error", "Seleccione un administrador")
@@ -160,7 +171,7 @@ class VistaAdmins(ctk.CTkFrame):
         item = seleccionado[0]
         valores = self.tree.item(item, "values")
         
-        # Ventana emergente (Toplevel) para edición
+        # Ventana emergente para editar
         ventana_editar = ctk.CTkToplevel(self)
         ventana_editar.title("Editar Administrador")
         ventana_editar.after(200, lambda: ventana_editar.iconbitmap("apple.ico"))
@@ -169,33 +180,38 @@ class VistaAdmins(ctk.CTkFrame):
         ventana_editar.grab_set()
         ventana_editar.configure(fg_color=self.tema.colores["blanco"])
         
-        # Centrar el popup
+        # Centrar la ventana emergente
         ventana_editar.update_idletasks()
         x = (self.winfo_screenwidth() // 2) - (400 // 2)
         y = (self.winfo_screenheight() // 2) - (500 // 2)
         ventana_editar.geometry(f"400x500+{x}+{y}")
         
+        # Titulo de la ventana emergente
         titulo = self.tema.crear_subtitulo(ventana_editar, "Editar Administrador")
         titulo.pack(pady=20)
         
+        # Nombre
         nombre_entry = self.tema.crear_entrada(ventana_editar, "Nombre", 300)
         nombre_entry.insert(0, valores[1])
         nombre_entry.pack(pady=10)
         
+        # Telefono
         telefono_entry = self.tema.crear_entrada(ventana_editar, "Teléfono", 300)
         telefono_entry.insert(0, valores[2])
         telefono_entry.pack(pady=10)
         
+        # Correo
         correo_entry = self.tema.crear_entrada(ventana_editar, "Correo", 300)
         correo_entry.insert(0, valores[3])
         correo_entry.configure(state="disabled") # No editable
         correo_entry.pack(pady=10)
         
+        # Contraseña
         contrasena_entry = self.tema.crear_entrada(ventana_editar, "Nueva contraseña (opcional)", 300)
         contrasena_entry.configure(show="•")
         contrasena_entry.pack(pady=10)
         
-        def guardar_cambios():
+        def guardar_cambios(): # Meotdo encargado de guardar los cambios
             nuevo_nombre = nombre_entry.get()
             nuevo_telefono = telefono_entry.get()
             nueva_contrasena = contrasena_entry.get()
@@ -216,9 +232,10 @@ class VistaAdmins(ctk.CTkFrame):
             except Exception as e:
                 messagebox.showerror("Error", str(e))
         
+        # Boton para guardar
         self.tema.crear_boton_primario(ventana_editar, "💾 Guardar Cambios", guardar_cambios, 200).pack(pady=20)
     
-    def eliminar_admin(self):
+    def eliminar_admin(self): # Metodo encargado de eliminar (desactivar) administradores existentes dentro de la interfaz.
         seleccionado = self.tree.selection()
         if not seleccionado:
             messagebox.showerror("Error", "Seleccione un administrador")
@@ -240,7 +257,7 @@ class VistaAdmins(ctk.CTkFrame):
             except Exception as e:
                 messagebox.showerror("Error", str(e))
     
-    def reactivar_admin(self):
+    def reactivar_admin(self): # Metodo encargado de reactivar administradores existentes dentro de la interfaz.
         seleccionado = self.tree.selection()
         if not seleccionado:
             messagebox.showerror("Error", "Seleccione un administrador")
@@ -261,7 +278,7 @@ class VistaAdmins(ctk.CTkFrame):
             except Exception as e:
                 messagebox.showerror("Error", str(e))
     
-    def limpiar_campos(self):
+    def limpiar_campos(self): # Metodo limpiar los campos dentro de la interfaz.
         self.nombre_entry.delete(0, "end")
         self.telefono_entry.delete(0, "end")
         self.correo_entry.delete(0, "end")

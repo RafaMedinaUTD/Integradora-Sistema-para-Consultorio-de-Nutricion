@@ -1,3 +1,5 @@
+# Modulo encargado de controlar las operaciones dentro de pacientes.
+
 from base_datos.consultas import ConsultasDB
 
 class Paciente:

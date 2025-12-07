@@ -1,3 +1,5 @@
+# Modulo encargado de la conexion, ejecucion de consultas y actualizaciones.
+
 import mysql.connector
 from mysql.connector import Error
 from configuracion import Configuracion
@@ -6,7 +8,7 @@ class ConexionDB:
     def __init__(self):
         self.config = Configuracion.BASE_DATOS
     
-    def conectar(self):
+    def conectar(self): # Metodo que permite conectar a la base de datos.
         try:
             conexion = mysql.connector.connect(
                 host=self.config["host"],
@@ -18,7 +20,7 @@ class ConexionDB:
         except Error as e:
             raise Exception(f"Error de conexión: {str(e)}")
     
-    def ejecutar_consulta(self, query, params=None):
+    def ejecutar_consulta(self, query, params=None): # Metodo que se encarga de ejecutar una consulta.
         conexion = self.conectar()
         try:
             cursor = conexion.cursor(dictionary=True)
@@ -32,7 +34,7 @@ class ConexionDB:
             cursor.close()
             conexion.close()
     
-    def ejecutar_actualizacion(self, query, params=None):
+    def ejecutar_actualizacion(self, query, params=None): # Metodo que se encarga de ejecutar una actualizacion.
         conexion = self.conectar()
         try:
             cursor = conexion.cursor()

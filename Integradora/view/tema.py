@@ -1,3 +1,5 @@
+# Modulo encargado de controlar los elementos de diferentes interfaces.
+
 import customtkinter as ctk
 from tkinter import ttk
 from configuracion import Configuracion
@@ -7,7 +9,7 @@ class Tema:
         self.colores = Configuracion.COLORES
         self.fuentes = Configuracion.FUENTES
     
-    def aplicar_tema_frame(self, frame):
+    def aplicar_tema_frame(self, frame): # Metodo encargado de configurar las visuales de los frames.
         frame.configure(
             fg_color=self.colores["blanco"],
             border_color=self.colores["gris_claro"],
@@ -15,7 +17,7 @@ class Tema:
             corner_radius=10
         )
     
-    def crear_boton_primario(self, parent, texto, comando, width=200):
+    def crear_boton_primario(self, parent, texto, comando, width=200): # Metodo encargado de configurar las visuales de los botones primarios.
         return ctk.CTkButton(
             parent,
             text=texto,
@@ -29,7 +31,7 @@ class Tema:
             font=self.fuentes["boton"]
         )
     
-    def crear_boton_secundario(self, parent, texto, comando, width=200):
+    def crear_boton_secundario(self, parent, texto, comando, width=200): # Metodo encargado de configurar las visuales de los botones secundarios.
         return ctk.CTkButton(
             parent,
             text=texto,
@@ -43,7 +45,7 @@ class Tema:
             font=self.fuentes["boton"]
         )
     
-    def crear_entrada(self, parent, placeholder, width=250):
+    def crear_entrada(self, parent, placeholder, width=250): # Metodo encargado de configurar las visuales de las entradas de texto.
         return ctk.CTkEntry(
             parent,
             placeholder_text=placeholder,
@@ -56,7 +58,7 @@ class Tema:
             text_color=self.colores["negro"]
         )
     
-    def crear_titulo(self, parent, texto):
+    def crear_titulo(self, parent, texto): # Metodo encargado de configurar las visuales de los titulos.
         return ctk.CTkLabel(
             parent,
             text=texto,
@@ -64,7 +66,7 @@ class Tema:
             text_color=self.colores["negro"]
         )
     
-    def crear_subtitulo(self, parent, texto):
+    def crear_subtitulo(self, parent, texto): # Metodo encargado de configurar las visuales de los subtitulos.
         return ctk.CTkLabel(
             parent,
             text=texto,
@@ -72,7 +74,7 @@ class Tema:
             text_color=self.colores["negro"]
         )
     
-    def crear_texto_pequeno(self, parent, texto):
+    def crear_texto_pequeno(self, parent, texto): # Metodo encargado de configurar las visuales de los textos pequeños.
         return ctk.CTkLabel(
             parent,
             text=texto,
@@ -80,7 +82,7 @@ class Tema:
             text_color=self.colores["negro"]
         )
     
-    def configurar_estilo_tablas(self):
+    def configurar_estilo_tablas(self): # Metodo encargado de configurar las visuales de las tablas de contenido.
         style = ttk.Style()
         
         style.theme_use("clam") 
@@ -89,27 +91,27 @@ class Tema:
             "Treeview",
             background=self.colores["blanco"],
             foreground=self.colores["negro"],
-            fieldbackground=self.colores["blanco"], # Fondo cuando no hay filas
+            fieldbackground=self.colores["blanco"],
             borderwidth=0,
-            rowheight=35,           # Filas más altas para mejor legibilidad
-            font=("Helvetica", 12)      # Fuente más limpia y grande
+            rowheight=35,
+            font=("Helvetica", 12)
         )
         
         style.layout("Treeview", [('Treeview.treearea', {'sticky': 'nswe'})]) 
 
         style.map(
             "Treeview",
-            background=[('selected', self.colores["verde_hover"])], # Verde oscuro al seleccionar
-            foreground=[('selected', self.colores["blanco"])]       # Texto blanco al seleccionar
+            background=[('selected', self.colores["verde_hover"])],
+            foreground=[('selected', self.colores["blanco"])]      
         )
 
         style.configure(
             "Treeview.Heading",
-            background=self.colores["verde"],       # Fondo Verde Corporativo
-            foreground=self.colores["blanco"],      # Texto Blanco
-            relief="flat",                          # Sin bordes 3D anticuados
-            font=("Helvetica", 12, "bold"),             # Negrita
-            padding=(10, 5)                         # Espacio interno
+            background=self.colores["verde"],      
+            foreground=self.colores["blanco"],      
+            relief="flat",                         
+            font=("Helvetica", 12, "bold"),            
+            padding=(10, 5)                        
         )
         
         style.map(

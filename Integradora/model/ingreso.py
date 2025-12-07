@@ -1,3 +1,5 @@
+# Modulo encargado de controlar las operaciones dentro de ingresos.
+
 from base_datos.consultas import ConsultasDB
 from datetime import datetime
 

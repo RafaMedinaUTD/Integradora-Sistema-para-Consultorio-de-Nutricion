@@ -1,3 +1,5 @@
+# Modulo encargado de las consultas de la aplicacion.
+
 from base_datos.conexion import ConexionDB
 from datetime import datetime
 
@@ -5,6 +7,8 @@ class ConsultasDB:
     def __init__(self):
         self.db = ConexionDB()
     
+    # Consultas para administradores.
+
     def verificar_administrador(self, correo, contrasena):
         query = "SELECT * FROM administrador WHERE correo = %s AND contrasena = %s AND activo = 1"
         return self.db.ejecutar_consulta(query, (correo, contrasena))
@@ -37,6 +41,8 @@ class ConsultasDB:
         query = "UPDATE administrador SET activo = 1 WHERE id_administrador = %s"
         return self.db.ejecutar_actualizacion(query, (id_admin,))
     
+    # Consultas para pacientes.
+
     def obtener_pacientes(self, id_admin):
         query = "SELECT * FROM pacientes WHERE id_admin = %s AND activo = TRUE"
         return self.db.ejecutar_consulta(query, (id_admin,))
@@ -53,6 +59,8 @@ class ConsultasDB:
         query = "UPDATE pacientes SET activo = FALSE WHERE id_paciente = %s"
         return self.db.ejecutar_actualizacion(query, (id_paciente,))
     
+    # Consultas para citas.
+
     def obtener_citas(self, id_admin):
         query = """
         SELECT c.id_cita, p.nombre, p.peso, h.dia_semana, 
@@ -141,7 +149,8 @@ class ConsultasDB:
         """
         return self.db.ejecutar_consulta(query, (id_admin,))
     
-    # Consultas para ingresos
+    # Consultas para ingresos.
+
     def obtener_ingresos_hoy(self, id_admin, fecha):
         query = """
         SELECT i.*, TIME_FORMAT(i.hora, '%H:%i') as hora 

@@ -1,3 +1,5 @@
+# Modulo encargado de controlar las operaciones dentro de administradores.
+
 from base_datos.consultas import ConsultasDB
 
 class Administrador:
