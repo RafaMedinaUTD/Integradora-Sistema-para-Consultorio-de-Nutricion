@@ -63,10 +63,16 @@ class VentanaPrincipal:
             font=("Helvetica", 16),
             text_color=self.tema.colores["blanco"]
         )
-        user_label.pack(pady=(0, 30))
+        user_label.pack(pady=(0, 20))
 
         # Usuario Activo
-        self.tema.crear_texto_pequeno(self.root, f"Usuario: {primer_nombre} - Version: 0.6").pack(pady=(10,0))
+        active_label = ctk.CTkLabel(
+            self.sidebar_frame,
+            text=f"Usuario Activo: {primer_nombre}",
+            font=("Helvetica", 12),
+            text_color=self.tema.colores["blanco"],
+            )
+        active_label.pack(pady=(0,0))
         
         # --- Botones de Acción ---
 

@@ -1,12 +1,9 @@
 """
-NustriSystem v.0.6
+NustriSystem v.0.7.1
 
 Changelog:
 
-    - Agregado un Changelog.
-    - Agregados comentarios a todos los modulos para la facilidad de navegacion.
-    - Eliminado el modulo "registro.py" remplazado por "admins.py".
-    - Version de la aplicacion mostrada en la parte superior de la ventana principal.
+    - Arreglado un error de layout.
 
 """
 
