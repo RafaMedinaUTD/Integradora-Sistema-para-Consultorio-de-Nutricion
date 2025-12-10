@@ -21,10 +21,7 @@ class VentanaPrincipal:
         
         self.root.title("NutriSystem - Panel Principal")
         
-        # Configurar icono de aplicacion
-        self.root.wm_iconbitmap("apple.ico")
-        icon_img = PhotoImage(file="apple.png")
-        self.root.iconphoto(False, icon_img)
+        
         
         # Configurar pantalla completa
         ancho = self.root.winfo_screenwidth()

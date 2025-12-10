@@ -16,9 +16,7 @@ class LoginApp:
         self.root.title("NutriSystem - Login")
         self.root.configure(fg_color=self.tema.colores["blanco"])
         
-        self.root.wm_iconbitmap("apple.ico")
-        icon_img = PhotoImage(file="apple.png")
-        self.root.iconphoto(False, icon_img)
+
         
         self.restaurar_login()
     
